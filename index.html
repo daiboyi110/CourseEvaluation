@@ -341,10 +341,13 @@
   <div class="results-wrap" id="resultsWrap">
     <div class="results-header">
       <h3>Mean Scores by Course</h3>
-      <div class="legend">
-        <span><span class="dot" style="background:#27ae60"></span>4.25–5.00</span>
-        <span><span class="dot" style="background:#2980b9"></span>3.50–4.25</span>
-        <span><span class="dot" style="background:#e74c3c"></span>below 3.50</span>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div class="legend">
+          <span><span class="dot" style="background:#27ae60"></span>4.25–5.00</span>
+          <span><span class="dot" style="background:#2980b9"></span>3.50–4.25</span>
+          <span><span class="dot" style="background:#e74c3c"></span>below 3.50</span>
+        </div>
+        <button class="btn btn-sm btn-outline" id="toggleQBtn" onclick="toggleQuestions()">Hide Questions</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -571,6 +574,9 @@
   function buildTable() {
     const ready = courses.filter(c => c.status === 'done');
     if (ready.length === 0) return;
+    questionsVisible = true;
+    const toggleBtn = document.getElementById('toggleQBtn');
+    if (toggleBtn) toggleBtn.textContent = 'Hide Questions';
 
     // Collect all question numbers
     const allNums = new Set();
@@ -681,6 +687,16 @@
 
   function hideResults() {
     setVisible('resultsWrap', 'none');
+  }
+
+  let questionsVisible = true;
+  function toggleQuestions() {
+    questionsVisible = !questionsVisible;
+    const btn = document.getElementById('toggleQBtn');
+    document.querySelectorAll('#tbody tr:not(.avg-row)').forEach(tr => {
+      tr.style.display = questionsVisible ? '' : 'none';
+    });
+    btn.textContent = questionsVisible ? 'Hide Questions' : 'Show Questions';
   }
 
   // ── Helpers ──────────────────────────────────────────────────
