@@ -536,6 +536,23 @@
       tbody.appendChild(tr);
     });
 
+    // Teaching Effectiveness Score row (avg of Q1, 4, 7, 10, 16, 19)
+    const teNums = [1, 4, 7, 10, 16, 19];
+    const teRow  = document.createElement('tr');
+    teRow.className = 'avg-row';
+    let teCells = `<td class="q-num"></td><td class="q-text">Teaching Effectiveness Score<br><span style="font-size:0.75rem;font-weight:400;color:var(--muted)">Avg of Q${teNums.join(', Q')}</span></td>`;
+    ready.forEach(c => {
+      const vals = teNums.map(n => c.questions.get(n)?.mean).filter(v => v !== undefined);
+      if (vals.length > 0) {
+        const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+        teCells += `<td class="mean-cell"><span class="badge ${badgeClass(avg)}">${avg.toFixed(2)}</span></td>`;
+      } else {
+        teCells += `<td class="mean-cell"><span class="badge-empty">—</span></td>`;
+      }
+    });
+    teRow.innerHTML = teCells;
+    tbody.appendChild(teRow);
+
     // Response rate row
     const respRow = document.createElement('tr');
     respRow.className = 'avg-row';
