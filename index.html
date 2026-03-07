@@ -347,7 +347,7 @@
           <span><span class="dot" style="background:#2980b9"></span>3.50–4.25</span>
           <span><span class="dot" style="background:#e74c3c"></span>below 3.50</span>
         </div>
-        <button class="btn btn-sm btn-outline" id="toggleQBtn" onclick="toggleQuestions()">Hide Questions</button>
+        <button class="btn btn-sm btn-outline" id="toggleQBtn" onclick="toggleQuestions()">Hide Original Question Scores</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -576,7 +576,7 @@
     if (ready.length === 0) return;
     questionsVisible = true;
     const toggleBtn = document.getElementById('toggleQBtn');
-    if (toggleBtn) toggleBtn.textContent = 'Hide Questions';
+    if (toggleBtn) toggleBtn.textContent = 'Hide Original Question Scores';
 
     // Collect all question numbers
     const allNums = new Set();
@@ -696,7 +696,7 @@
     document.querySelectorAll('#tbody tr:not(.avg-row)').forEach(tr => {
       tr.style.display = questionsVisible ? '' : 'none';
     });
-    btn.textContent = questionsVisible ? 'Hide Questions' : 'Show Questions';
+    btn.textContent = questionsVisible ? 'Hide Original Question Scores' : 'Show Original Question Scores';
   }
 
   // ── Helpers ──────────────────────────────────────────────────
