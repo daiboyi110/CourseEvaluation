@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Evaluation Score Extractor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --accent:  #2980b9;
+      --bg:      #f0f4f8;
+      --card:    #ffffff;
+      --text:    #2c3e50;
+      --muted:   #7f8c8d;
+      --border:  #e0e6ed;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 22px 40px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    header p  { font-size: 0.88rem; opacity: 0.75; margin-top: 4px; }
+
+    main {
+      max-width: 1100px;
+      margin: 36px auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── Upload zone ─────────────────────────────────── */
+    .upload-zone {
+      background: white;
+      border: 2px dashed #bdc3c7;
+      border-radius: 12px;
+      padding: 56px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 20px;
+    }
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: #eaf4fb;
+    }
+    .upload-zone .icon { font-size: 2.8rem; margin-bottom: 12px; }
+    .upload-zone h2   { font-size: 1.1rem; margin-bottom: 6px; }
+    .upload-zone p    { color: var(--muted); font-size: 0.87rem; }
+    #fileInput        { display: none; }
+
+    .btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 9px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--primary); }
+    .btn-sm {
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      margin-top: 0;
+    }
+    .btn-outline {
+      background: white;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .btn-outline:hover { background: #eaf4fb; color: var(--primary); border-color: var(--primary); }
+
+    /* ── File list ───────────────────────────────────── */
+    .file-list {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .file-list-header {
+      padding: 12px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid #f2f4f7;
+      font-size: 0.88rem;
+      gap: 10px;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-status {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-pending  { background: #fef9e7; color: #d4ac0d; border: 1px solid #f9e79f; }
+    .status-loading  { background: #eaf4fb; color: var(--accent); border: 1px solid #aed6f1; }
+    .status-done     { background: #eafaf1; color: #1e8449;     border: 1px solid #a9dfbf; }
+    .status-error    { background: #fdecea; color: #922b21;     border: 1px solid #f1948a; }
+    .file-name       { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-course     { color: var(--muted); font-size: 0.82rem; flex-shrink: 0; }
+    .file-remove     { color: #bdc3c7; cursor: pointer; font-size: 1rem; flex-shrink: 0; }
+    .file-remove:hover { color: #e74c3c; }
+
+    /* ── Loading spinner (inline) ────────────────────── */
+    .spin {
+      width: 12px; height: 12px;
+      border: 2px solid #aed6f1;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ───────────────────────────────────────── */
+    .error {
+      background: #fdecea;
+      color: #922b21;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    /* ── Results table ───────────────────────────────── */
+    .results-wrap {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+      display: none;
+    }
+    .results-header {
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .results-header h3 { font-size: 0.95rem; color: var(--primary); }
+    .legend { font-size: 0.78rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .legend span { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    .table-scroll { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #f8f9fa;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      white-space: normal;
+      vertical-align: bottom;
+    }
+    th.course-col {
+      text-align: center;
+      min-width: 120px;
+      max-width: 180px;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    td {
+      padding: 11px 16px;
+      border-bottom: 1px solid #f2f4f7;
+      font-size: 0.87rem;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td      { background: #fafbfc; }
+
+    td.q-num {
+      width: 32px;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    td.q-text { color: var(--text); line-height: 1.4; }
+    td.mean-cell { text-align: center; white-space: nowrap; }
+
+    /* average row */
+    tr.avg-row td {
+      background: #f8f9fa;
+      font-weight: 600;
+      border-top: 2px solid var(--border);
+      border-bottom: none;
+    }
+    tr.avg-row td.q-text { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.87rem;
+    }
+    .badge-green  { background: #d5f5e3; color: #1a7a41; }
+    .badge-blue   { background: #d6eaf8; color: #1a4f78; }
+    .badge-yellow { background: #fef5e7; color: #7d4c00; }
+    .badge-red    { background: #fdecea; color: #922b21; }
+    .badge-empty  { color: #bdc3c7; font-weight: 400; font-size: 0.82rem; }
+
+    .toolbar {
+      display: none;
+      gap: 10px;
+      margin-bottom: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .toolbar-left { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex: 1; }
+    .toolbar-right { display: flex; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Course Evaluation Score Extractor</h1>
+  <p>Upload one or more course evaluation PDFs to compare mean scores across courses</p>
+</header>
+
+<main>
+
+  <div class="upload-zone" id="uploadZone">
+    <div class="icon">&#128196;</div>
+    <h2>Drop PDF files here</h2>
+    <p>Upload multiple course evaluation reports to compare them side by side</p>
+    <button class="btn" onclick="document.getElementById('fileInput').click()">Choose PDF files</button>
+    <input type="file" id="fileInput" accept=".pdf" multiple>
+  </div>
+
+  <div class="error" id="error"></div>
+
+  <div class="toolbar" id="toolbar">
+    <div class="toolbar-left">
+      <button class="btn btn-sm btn-outline" onclick="document.getElementById('fileInput').click()">+ Add more PDFs</button>
+      <span id="toolbarStatus" style="font-size:0.85rem;color:var(--muted)"></span>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-sm" id="buildBtn" onclick="buildTable()" style="display:none">Build Table</button>
+      <button class="btn btn-sm btn-outline" onclick="resetAll()">Clear All</button>
+    </div>
+  </div>
+
+  <div class="file-list" id="fileList">
+    <div class="file-list-header">
+      <span>Loaded Files</span>
+    </div>
+    <div id="fileItems"></div>
+  </div>
+
+  <div class="results-wrap" id="resultsWrap">
+    <div class="results-header">
+      <h3>Mean Scores by Course</h3>
+      <div class="legend">
+        <span><span class="dot" style="background:#27ae60"></span>4.50–5.00</span>
+        <span><span class="dot" style="background:#2980b9"></span>4.00–4.49</span>
+        <span><span class="dot" style="background:#e67e22"></span>3.50–3.99</span>
+        <span><span class="dot" style="background:#e74c3c"></span>below 3.50</span>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // courses: array of { id, filename, courseName, questions: Map<number, {question, mean}> }
+  let courses = [];
+  let nextId  = 0;
+
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput  = document.getElementById('fileInput');
+
+  // ── Drag-and-drop ────────────────────────────────────────────
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const files = [...e.dataTransfer.files].filter(f => f.type === 'application/pdf');
+    if (files.length) addFiles(files);
+    else showError('Please drop PDF files only.');
+  });
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files.length) {
+      addFiles([...e.target.files]);
+      e.target.value = ''; // allow re-selecting same files
+    }
+  });
+
+  // ── Add files ────────────────────────────────────────────────
+  function addFiles(files) {
+    hideError();
+    setVisible('uploadZone',  'none');
+    setVisible('toolbar',     'flex');
+    setVisible('fileList',    'block');
+
+    files.forEach(file => {
+      const id         = nextId++;
+      const courseName = extractCourseNameFromFilename(file.name);
+      const entry      = { id, filename: file.name, courseName, questions: new Map(), status: 'pending' };
+      courses.push(entry);
+      renderFileItem(entry);
+      processFile(file, entry);
+    });
+  }
+
+  // ── Extract course name from filename ────────────────────────
+  // Grabs content between first pair of parentheses in the filename
+  function extractCourseNameFromFilename(filename) {
+    const m = filename.match(/\(([^)]+)\)/);
+    return m ? m[1] : filename.replace(/\.pdf$/i, '');
+  }
+
+  // ── Render a file row ────────────────────────────────────────
+  function renderFileItem(entry) {
+    const el = document.createElement('div');
+    el.className  = 'file-item';
+    el.id         = 'file-' + entry.id;
+    el.innerHTML  = `
+      <div class="file-status status-pending" id="status-${entry.id}">&#8943;</div>
+      <div class="file-name" title="${esc(entry.filename)}">${esc(entry.filename)}</div>
+      <div class="file-course" id="course-label-${entry.id}">${esc(entry.courseName)}</div>
+      <div class="file-remove" onclick="removeFile(${entry.id})" title="Remove">&#10005;</div>
+    `;
+    document.getElementById('fileItems').appendChild(el);
+  }
+
+  function setFileStatus(id, type, symbol) {
+    const el = document.getElementById('status-' + id);
+    if (!el) return;
+    el.className  = 'file-status status-' + type;
+    el.innerHTML  = type === 'loading'
+      ? '<span class="spin"></span>'
+      : symbol;
+  }
+
+  // ── Remove a file ────────────────────────────────────────────
+  function removeFile(id) {
+    courses = courses.filter(c => c.id !== id);
+    const el = document.getElementById('file-' + id);
+    if (el) el.remove();
+    if (courses.length === 0) resetAll();
+    else updateToolbar();
+    hideResults();
+  }
+
+  // ── Process a single PDF ─────────────────────────────────────
+  async function processFile(file, entry) {
+    setFileStatus(entry.id, 'loading', '');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const pdf    = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+      let fullText = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page    = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        fullText += content.items.map(i => i.str).join(' ') + '\n';
+      }
+
+      const questions = parseQuestions(fullText);
+
+      if (questions.size === 0) {
+        setFileStatus(entry.id, 'error', '!');
+        showError('Could not extract scores from: ' + file.name);
+        return;
+      }
+
+      entry.questions = questions;
+      entry.status    = 'done';
+      setFileStatus(entry.id, 'done', '&#10003;');
+    } catch (err) {
+      entry.status = 'error';
+      setFileStatus(entry.id, 'error', '!');
+      showError('Failed to read ' + file.name + ': ' + err.message);
+    }
+
+    updateToolbar();
+    // Auto-build table once all files have been processed
+    if (courses.every(c => c.status === 'done' || c.status === 'error')) {
+      buildTable();
+    }
+  }
+
+  // ── Parse questions from full PDF text ───────────────────────
+  function parseQuestions(text) {
+    const map = new Map();
+
+    // Only parse after "Instructor Questions" to skip intro/guidelines
+    const sectionIdx = text.indexOf('Instructor Questions');
+    const workText   = sectionIdx !== -1 ? text.slice(sectionIdx) : text;
+
+    const seen = new Set();
+    const re   = /(\d{1,2})\s*\.\s+([\s\S]+?)Statistics\s+Value[\s\S]+?Mean\s+([\d]+\.[\d]+)/g;
+    let match;
+
+    while ((match = re.exec(workText)) !== null) {
+      const num = parseInt(match[1]);
+      if (num < 1 || num > 30 || seen.has(num)) continue;
+      seen.add(num);
+
+      const mean = parseFloat(match[3]);
+      if (isNaN(mean) || mean < 1 || mean > 5) continue;
+
+      let q = match[2].replace(/\s+/g, ' ').trim();
+      q = q.replace(/\s*Statistics\s*$/, '').trim();
+
+      map.set(num, { question: q, mean });
+    }
+
+    return map;
+  }
+
+  // ── Build the comparison table ───────────────────────────────
+  function buildTable() {
+    const ready = courses.filter(c => c.status === 'done');
+    if (ready.length === 0) return;
+
+    // Collect all question numbers
+    const allNums = new Set();
+    ready.forEach(c => c.questions.forEach((_, n) => allNums.add(n)));
+    const sortedNums = [...allNums].sort((a, b) => a - b);
+
+    // Header row
+    const thead = document.getElementById('thead');
+    thead.innerHTML = '';
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = '<th style="width:36px">#</th><th>Question</th>';
+    ready.forEach(c => {
+      headerRow.innerHTML += `<th class="course-col">${esc(c.courseName)}</th>`;
+    });
+    thead.appendChild(headerRow);
+
+    // Body rows
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+
+    sortedNums.forEach(num => {
+      // Get question text from first course that has this question
+      let qText = '';
+      for (const c of ready) {
+        if (c.questions.has(num)) { qText = c.questions.get(num).question; break; }
+      }
+
+      const tr = document.createElement('tr');
+      let cells = `<td class="q-num">${num}</td><td class="q-text">${esc(qText)}</td>`;
+      ready.forEach(c => {
+        const entry = c.questions.get(num);
+        if (entry) {
+          cells += `<td class="mean-cell"><span class="badge ${badgeClass(entry.mean)}">${entry.mean.toFixed(2)}</span></td>`;
+        } else {
+          cells += `<td class="mean-cell"><span class="badge-empty">—</span></td>`;
+        }
+      });
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+    });
+
+    // Average row
+    const avgRow = document.createElement('tr');
+    avgRow.className = 'avg-row';
+    let avgCells = `<td class="q-num"></td><td class="q-text">Course Average</td>`;
+    ready.forEach(c => {
+      const vals = [...c.questions.values()].map(q => q.mean);
+      const avg  = vals.reduce((a, b) => a + b, 0) / vals.length;
+      avgCells  += `<td class="mean-cell"><span class="badge ${badgeClass(avg)}">${avg.toFixed(2)}</span></td>`;
+    });
+    avgRow.innerHTML = avgCells;
+    tbody.appendChild(avgRow);
+
+    setVisible('resultsWrap', 'block');
+  }
+
+  function badgeClass(mean) {
+    return mean >= 4.5 ? 'badge badge-green'
+         : mean >= 4.0 ? 'badge badge-blue'
+         : mean >= 3.5 ? 'badge badge-yellow'
+         :               'badge badge-red';
+  }
+
+  // ── Toolbar status ────────────────────────────────────────────
+  function updateToolbar() {
+    const done    = courses.filter(c => c.status === 'done').length;
+    const pending = courses.filter(c => c.status === 'pending' || c.status === 'loading').length;
+    const status  = document.getElementById('toolbarStatus');
+    status.textContent = pending > 0
+      ? `Processing ${pending} file${pending > 1 ? 's' : ''}…`
+      : `${done} course${done !== 1 ? 's' : ''} loaded`;
+  }
+
+  // ── Reset ────────────────────────────────────────────────────
+  function resetAll() {
+    courses = [];
+    nextId  = 0;
+    document.getElementById('fileItems').innerHTML = '';
+    setVisible('uploadZone',  'block');
+    setVisible('toolbar',     'none');
+    setVisible('fileList',    'none');
+    hideResults();
+    hideError();
+  }
+
+  function hideResults() {
+    setVisible('resultsWrap', 'none');
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function setVisible(id, display) {
+    document.getElementById(id).style.display = display;
+  }
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('error').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
