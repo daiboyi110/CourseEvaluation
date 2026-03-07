@@ -468,6 +468,18 @@
         return;
       }
 
+      // Validate question count matches selected course type
+      const qCount    = parsed.questions.size;
+      const isSole    = courseType === 'sole';
+      const wrongType = isSole ? qCount <= 12 : qCount > 12;
+      if (wrongType) {
+        const expected = isSole ? 'Sole Instructor / Course Coordinator (21 questions)' : 'Co-Instructor (12 questions)';
+        const found    = isSole ? 'Co-Instructor' : 'Sole Instructor / Course Coordinator';
+        setFileStatus(entry.id, 'error', '!');
+        showError(`Wrong course type: "${file.name}" appears to be a ${found} PDF (${qCount} questions found), but "${expected}" is selected. Please switch the course type or upload the correct file.`);
+        return;
+      }
+
       entry.questions  = parsed.questions;
       entry.responses  = parsed.responses;
       entry.audience   = parsed.audience;
