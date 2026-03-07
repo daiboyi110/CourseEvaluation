@@ -45,11 +45,11 @@ Click **Clear All** to remove all files and reset the tool, including unlocking 
 
 ## Score Color Legend
 
-| Color | Range | Meaning |
-|-------|-------|---------|
-| Green | 4.25 – 5.00 | Excellent |
-| Blue  | 3.50 – 4.25 | Good |
-| Red   | below 3.50  | Needs attention |
+| Color | Range |
+|-------|-------|
+| Green | 4.25 – 5.00 |
+| Blue  | 3.50 – 4.25 |
+| Red   | below 3.50  |
 
 ---
 
