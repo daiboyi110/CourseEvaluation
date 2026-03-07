@@ -429,8 +429,10 @@
   // ── Extract course name from filename ────────────────────────
   // Grabs content between first pair of parentheses in the filename
   function extractCourseNameFromFilename(filename) {
-    const m = filename.match(/\(([^)]+)\)/);
-    return m ? m[1] : filename.replace(/\.pdf$/i, '');
+    const m = filename.match(/\(([^)]+)\)\s*(\S+)\s+(\S+)/);
+    if (m) return `${m[1]} — ${m[2]} ${m[3]}`;
+    const m2 = filename.match(/\(([^)]+)\)/);
+    return m2 ? m2[1] : filename.replace(/\.pdf$/i, '');
   }
 
   // ── Render a file row ────────────────────────────────────────
