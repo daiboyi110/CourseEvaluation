@@ -293,42 +293,54 @@
       color: white;
     }
 
-    /* ── Help / README section ───────────────────────────── */
-    .help-toggle {
+    /* ── Tab navigation ──────────────────────────────────── */
+    .tab-nav {
+      background: var(--primary);
+      display: flex;
+      gap: 0;
+      padding: 0 40px;
+    }
+    .tab-btn {
       background: none;
       border: none;
-      color: var(--accent);
-      font-size: 0.88rem;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 12px 22px;
       cursor: pointer;
-      padding: 0;
-      text-decoration: underline;
-      margin-bottom: 16px;
-      display: inline-block;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
     }
-    .help-toggle:hover { color: var(--primary); }
+    .tab-btn:hover { color: white; }
+    .tab-btn.active {
+      color: white;
+      border-bottom-color: #5dade2;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
+    /* ── Help / README section ───────────────────────────── */
     .help-section {
       background: white;
       border-radius: 10px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      padding: 24px 28px;
-      margin-bottom: 20px;
-      display: none;
+      padding: 28px 32px;
+      max-width: 780px;
     }
     .help-section h2 {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: var(--primary);
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     .help-section h3 {
-      font-size: 0.88rem;
+      font-size: 0.92rem;
       color: var(--primary);
-      margin: 18px 0 6px;
+      margin: 20px 0 6px;
     }
     .help-section p, .help-section li {
-      font-size: 0.87rem;
+      font-size: 0.88rem;
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.65;
     }
     .help-section ul { padding-left: 18px; margin: 4px 0; }
     .help-section li { margin-bottom: 4px; }
@@ -343,7 +355,7 @@
     }
     .help-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
       margin-top: 8px;
     }
@@ -357,6 +369,21 @@
       font-weight: 600;
     }
     .help-color-card .dot { flex-shrink: 0; }
+
+    /* ── Action buttons (toggle + download) ──────────────── */
+    .btn-action {
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 0;
+    }
+    .btn-action:hover { background: #0f2540; }
   </style>
 </head>
 <body>
@@ -366,63 +393,14 @@
   <p>Upload one or more course evaluation PDFs to compare mean scores across courses</p>
 </header>
 
+<nav class="tab-nav">
+  <button class="tab-btn active" id="tab-extractor" onclick="switchTab('extractor')">Score Extractor</button>
+  <button class="tab-btn"        id="tab-help"       onclick="switchTab('help')">How to Use</button>
+</nav>
+
 <main>
 
-  <button class="help-toggle" onclick="toggleHelp()">How to use this tool</button>
-
-  <div class="help-section" id="helpSection">
-    <h2>How to Use This Tool</h2>
-
-    <h3>1. Select Your Course Type</h3>
-    <p>Choose the type that matches your Blue evaluation PDFs before uploading:</p>
-    <ul>
-      <li><strong>Sole Instructor / Course Coordinator</strong> — evaluations with 21 instructor questions</li>
-      <li><strong>Co-Instructor</strong> — evaluations with 12 instructor questions</li>
-    </ul>
-    <div class="help-note">The course type locks once files are loaded. Click <strong>Clear All</strong> to switch types.</div>
-
-    <h3>2. Upload PDF Files</h3>
-    <p>Drag and drop one or more Blue evaluation PDF files onto the upload zone, or click <strong>Choose PDF files</strong>. Upload multiple PDFs to compare courses side by side. Valid files are displayed even if some fail.</p>
-
-    <h3>3. Read the Results Table</h3>
-    <ul>
-      <li>Each <strong>column</strong> is one course, labeled with its course code and instructor name.</li>
-      <li>Each <strong>row</strong> is one evaluation question showing the mean score per course.</li>
-      <li><strong>Survey Completion</strong> — responses out of enrollment and the completion rate.</li>
-      <li><strong>Teaching Effectiveness Score</strong> — average of key teaching questions (see below).</li>
-    </ul>
-
-    <h3>4. Score Color Legend</h3>
-    <div class="help-grid">
-      <div class="help-color-card" style="background:#d5f5e3;color:#1a7a41">
-        <span class="dot" style="background:#27ae60;width:10px;height:10px;border-radius:50%;display:inline-block"></span>4.25 – 5.00
-      </div>
-      <div class="help-color-card" style="background:#d6eaf8;color:#1a4f78">
-        <span class="dot" style="background:#2980b9;width:10px;height:10px;border-radius:50%;display:inline-block"></span>3.50 – 4.25
-      </div>
-      <div class="help-color-card" style="background:#fdecea;color:#922b21">
-        <span class="dot" style="background:#e74c3c;width:10px;height:10px;border-radius:50%;display:inline-block"></span>Below 3.50
-      </div>
-    </div>
-
-    <h3>5. Teaching Effectiveness Score</h3>
-    <ul>
-      <li><strong>Sole Instructor / Course Coordinator:</strong> average of Q1, Q4, Q7, Q10, Q16, Q19</li>
-      <li><strong>Co-Instructor:</strong> average of Q1, Q3, Q6, Q7, Q10, Q11</li>
-    </ul>
-
-    <h3>6. File Naming Convention</h3>
-    <p>The tool reads the course code and instructor name from the filename automatically. For best results, use the standard Blue export format:</p>
-    <div class="help-note">Example: <strong>Fall 2024 (KINE 2250) Jane Doe_Section1.pdf</strong> displays as <strong>KINE 2250 — Jane Doe</strong></div>
-
-    <h3>7. Other Actions</h3>
-    <ul>
-      <li>Click <strong>Hide Original Question Scores</strong> to collapse question rows and show summary rows only.</li>
-      <li>Click <strong>×</strong> next to any file to remove it — the table updates immediately.</li>
-      <li>Click <strong>Clear All</strong> to reset everything.</li>
-      <li>All processing happens in your browser — no data is uploaded to any server.</li>
-    </ul>
-  </div>
+  <div id="panel-extractor" class="tab-panel active">
 
   <div class="type-selector">
     <label>Course Type</label>
@@ -469,8 +447,8 @@
           <span><span class="dot" style="background:#2980b9"></span>3.50–4.25</span>
           <span><span class="dot" style="background:#e74c3c"></span>below 3.50</span>
         </div>
-        <button class="btn btn-sm btn-outline" id="toggleQBtn" onclick="toggleQuestions()">Hide Original Question Scores</button>
-        <button class="btn btn-sm btn-outline" onclick="downloadExcel()">Download Excel</button>
+        <button class="btn-action" id="toggleQBtn" onclick="toggleQuestions()">Hide Original Question Scores</button>
+        <button class="btn-action" onclick="downloadExcel()">Download Excel</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -479,17 +457,73 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
-  </div>
+  </div><!-- /panel-extractor -->
+
+  <div id="panel-help" class="tab-panel">
+    <div class="help-section">
+      <h2>How to Use This Tool</h2>
+
+      <h3>1. Select Your Course Type</h3>
+      <p>Choose the type that matches your Blue evaluation PDFs before uploading:</p>
+      <ul>
+        <li><strong>Sole Instructor / Course Coordinator</strong> — evaluations with 21 instructor questions</li>
+        <li><strong>Co-Instructor</strong> — evaluations with 12 instructor questions</li>
+      </ul>
+      <div class="help-note">The course type locks once files are loaded. Click <strong>Clear All</strong> to switch types.</div>
+
+      <h3>2. Upload PDF Files</h3>
+      <p>Drag and drop one or more Blue evaluation PDF files onto the upload zone, or click <strong>Choose PDF files</strong>. Upload multiple PDFs to compare courses side by side. Valid files are displayed even if some fail.</p>
+
+      <h3>3. Read the Results Table</h3>
+      <ul>
+        <li>Each <strong>column</strong> is one course, labeled with its course code and instructor name.</li>
+        <li>Each <strong>row</strong> is one evaluation question showing the mean score per course.</li>
+        <li><strong>Survey Completion</strong> — responses out of enrollment and the completion rate.</li>
+        <li><strong>Teaching Effectiveness Score</strong> — average of key teaching questions (see below).</li>
+      </ul>
+
+      <h3>4. Score Color Legend</h3>
+      <div class="help-grid">
+        <div class="help-color-card" style="background:#d5f5e3;color:#1a7a41">
+          <span class="dot" style="background:#27ae60;width:10px;height:10px;border-radius:50%;display:inline-block"></span>4.25 – 5.00
+        </div>
+        <div class="help-color-card" style="background:#d6eaf8;color:#1a4f78">
+          <span class="dot" style="background:#2980b9;width:10px;height:10px;border-radius:50%;display:inline-block"></span>3.50 – 4.25
+        </div>
+        <div class="help-color-card" style="background:#fdecea;color:#922b21">
+          <span class="dot" style="background:#e74c3c;width:10px;height:10px;border-radius:50%;display:inline-block"></span>Below 3.50
+        </div>
+      </div>
+
+      <h3>5. Teaching Effectiveness Score</h3>
+      <ul>
+        <li><strong>Sole Instructor / Course Coordinator:</strong> average of Q1, Q4, Q7, Q10, Q16, Q19</li>
+        <li><strong>Co-Instructor:</strong> average of Q1, Q3, Q6, Q7, Q10, Q11</li>
+      </ul>
+
+      <h3>6. File Naming Convention</h3>
+      <p>The tool reads the course code and instructor name from the filename automatically. For best results, use the standard Blue export format:</p>
+      <div class="help-note">Example: <strong>Fall 2024 (KINE 2250) Jane Doe_Section1.pdf</strong> displays as <strong>KINE 2250 — Jane Doe</strong></div>
+
+      <h3>7. Other Actions</h3>
+      <ul>
+        <li>Click <strong>Hide Original Question Scores</strong> to collapse question rows and show summary rows only.</li>
+        <li>Click <strong>Download Excel</strong> to export the results table to an Excel file.</li>
+        <li>Click <strong>×</strong> next to any file to remove it — the table updates immediately.</li>
+        <li>Click <strong>Clear All</strong> to reset everything.</li>
+        <li>All processing happens in your browser — no data is uploaded to any server.</li>
+      </ul>
+    </div>
+  </div><!-- /panel-help -->
 
 </main>
 
 <script>
-  function toggleHelp() {
-    const sec = document.getElementById('helpSection');
-    const btn = document.querySelector('.help-toggle');
-    const visible = sec.style.display === 'block';
-    sec.style.display = visible ? 'none' : 'block';
-    btn.textContent = visible ? 'How to use this tool' : 'Hide instructions';
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
   }
 
   pdfjsLib.GlobalWorkerOptions.workerSrc =
