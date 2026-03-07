@@ -440,13 +440,31 @@
   function parseQuestions(text) {
     const map = new Map();
 
-    // Extract response stats from header (present anywhere in text)
-    const m_aud  = text.match(/Course\s+Audience\s*:?\s*(\d+)/i);
-    const m_resp = text.match(/Responses\s+Received\s*:?\s*(\d+)/i);
-    const m_rat  = text.match(/Response\s+Ratio\s*:?\s*([\d.]+\s*%)/i);
-    const audience  = m_aud  ? m_aud[1].trim()          : '';
-    const responses = m_resp ? m_resp[1].trim()          : '';
-    const ratio     = m_rat  ? m_rat[1].replace(/\s/,'') : '';
+    // Extract response stats from the header section (before question data).
+    // The PDF header is a two-column table: labels appear first, then values
+    // grouped together ("62 58 93.55%"), so we find them as a sequence.
+    const instrIdx   = text.indexOf('Instructor Questions');
+    const headerText = instrIdx > 0 ? text.slice(0, instrIdx) : text.slice(0, 5000);
+
+    let audience = '', responses = '', ratio = '';
+
+    // Try 1: label and value are adjacent (same text line)
+    const m_aud_adj  = headerText.match(/Course\s+Audience\s*:?\s*(\d+)/i);
+    const m_resp_adj = headerText.match(/Responses?\s+Received\s*:?\s*(\d+)/i);
+    const m_rat_adj  = headerText.match(/Response\s+Ratio\s*:?\s*([\d.]+%)/i);
+    if (m_aud_adj)  audience  = m_aud_adj[1];
+    if (m_resp_adj) responses = m_resp_adj[1];
+    if (m_rat_adj)  ratio     = m_rat_adj[1];
+
+    // Try 2: values are grouped — two counts followed by a percentage (e.g. "62 58 93.55%")
+    if (!audience || !responses || !ratio) {
+      const seqM = headerText.match(/\b(\d{2,4})\s+(\d{2,4})\s+([\d]{2,3}\.[\d]{2}%)/);
+      if (seqM) {
+        if (!audience)  audience  = seqM[1];
+        if (!responses) responses = seqM[2];
+        if (!ratio)     ratio     = seqM[3];
+      }
+    }
 
     // Only parse after "Instructor Questions" to skip intro/guidelines
     const sectionIdx = text.indexOf('Instructor Questions');
