@@ -48,7 +48,7 @@ Click **Clear All** to remove all files and reset the tool, including unlocking 
 | Color        | Range        |
 |--------------|--------------|
 | Dark Green   | 4.25 – 5.00  |
-| Light Green  | 3.50 – 4.25  |
+| Baby Blue    | 3.50 – 4.25  |
 | Yellow       | below 3.50   |
 
 ---
