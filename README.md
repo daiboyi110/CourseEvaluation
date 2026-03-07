@@ -45,11 +45,11 @@ Click **Clear All** to remove all files and reset the tool, including unlocking 
 
 ## Score Color Legend
 
-| Color | Range |
-|-------|-------|
-| Green | 4.25 – 5.00 |
-| Blue  | 3.50 – 4.25 |
-| Red   | below 3.50  |
+| Color        | Range        |
+|--------------|--------------|
+| Dark Green   | 4.25 – 5.00  |
+| Light Green  | 3.50 – 4.25  |
+| Yellow       | below 3.50   |
 
 ---
 
