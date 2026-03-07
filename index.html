@@ -441,12 +441,12 @@
     const map = new Map();
 
     // Extract response stats from header (present anywhere in text)
-    const m_aud  = text.match(/Course Audience[:\s]+(\d+)/);
-    const m_resp = text.match(/Responses Received[:\s]+(\d+)/);
-    const m_rat  = text.match(/Response Ratio[:\s]+([\d.]+%)/);
-    const audience  = m_aud  ? m_aud[1]  : '';
-    const responses = m_resp ? m_resp[1] : '';
-    const ratio     = m_rat  ? m_rat[1]  : '';
+    const m_aud  = text.match(/Course\s+Audience\s*:?\s*(\d+)/i);
+    const m_resp = text.match(/Responses\s+Received\s*:?\s*(\d+)/i);
+    const m_rat  = text.match(/Response\s+Ratio\s*:?\s*([\d.]+\s*%)/i);
+    const audience  = m_aud  ? m_aud[1].trim()          : '';
+    const responses = m_resp ? m_resp[1].trim()          : '';
+    const ratio     = m_rat  ? m_rat[1].replace(/\s/,'') : '';
 
     // Only parse after "Instructor Questions" to skip intro/guidelines
     const sectionIdx = text.indexOf('Instructor Questions');
