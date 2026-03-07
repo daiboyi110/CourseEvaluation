@@ -501,7 +501,6 @@
       entry.questions  = parsed.questions;
       entry.responses  = parsed.responses;
       entry.audience   = parsed.audience;
-      entry.ratio      = parsed.ratio;
       entry.status     = 'done';
       setFileStatus(entry.id, 'done', '&#10003;');
     } catch (err) {
@@ -532,18 +531,15 @@
     // Try 1: label and value are adjacent (same text line)
     const m_aud_adj  = headerText.match(/Course\s+Audience\s*:?\s*(\d+)/i);
     const m_resp_adj = headerText.match(/Responses?\s+Received\s*:?\s*(\d+)/i);
-    const m_rat_adj  = headerText.match(/Response\s+Ratio\s*:?\s*([\d.]+%)/i);
     if (m_aud_adj)  audience  = m_aud_adj[1];
     if (m_resp_adj) responses = m_resp_adj[1];
-    if (m_rat_adj)  ratio     = m_rat_adj[1];
 
-    // Try 2: values are grouped — two counts followed by a percentage (e.g. "62 58 93.55%")
-    if (!audience || !responses || !ratio) {
-      const seqM = headerText.match(/\b(\d{1,4})\s+(\d{1,4})\s+([\d]{1,3}(?:\.[\d]{1,2})?)%/);
+    // Try 2: values are grouped — two counts appearing in sequence (e.g. "62 58")
+    if (!audience || !responses) {
+      const seqM = headerText.match(/\b(\d{1,4})\s+(\d{1,4})\s+[\d]{1,3}(?:\.[\d]{1,2})?%/);
       if (seqM) {
         if (!audience)  audience  = seqM[1];
         if (!responses) responses = seqM[2];
-        if (!ratio)     ratio     = seqM[3] + '%';
       }
     }
 
@@ -569,7 +565,7 @@
       map.set(num, { question: q, mean });
     }
 
-    return { questions: map, responses, audience, ratio };
+    return { questions: map, responses, audience };
   }
 
   // ── Build the comparison table ───────────────────────────────
@@ -642,9 +638,11 @@
     respRow.className = 'avg-row';
     let respCells = `<td class="q-num"></td><td class="q-text">Survey Completion</td>`;
     ready.forEach(c => {
-      const label = (c.responses && c.audience)
-        ? `${c.responses}/${c.audience}${c.ratio ? ' (' + c.ratio + ')' : ''}`
-        : '—';
+      let label = '—';
+      if (c.responses && c.audience) {
+        const pct = (parseInt(c.responses) / parseInt(c.audience) * 100).toFixed(1) + '%';
+        label = `${c.responses}/${c.audience} (${pct})`;
+      }
       respCells += `<td class="mean-cell" style="font-size:0.85rem;color:var(--text)">${esc(label)}</td>`;
     });
     respRow.innerHTML = respCells;
