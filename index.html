@@ -409,16 +409,19 @@
         fullText += content.items.map(i => i.str).join(' ') + '\n';
       }
 
-      const questions = parseQuestions(fullText);
+      const parsed = parseQuestions(fullText);
 
-      if (questions.size === 0) {
+      if (parsed.questions.size === 0) {
         setFileStatus(entry.id, 'error', '!');
         showError('Could not extract scores from: ' + file.name);
         return;
       }
 
-      entry.questions = questions;
-      entry.status    = 'done';
+      entry.questions  = parsed.questions;
+      entry.responses  = parsed.responses;
+      entry.audience   = parsed.audience;
+      entry.ratio      = parsed.ratio;
+      entry.status     = 'done';
       setFileStatus(entry.id, 'done', '&#10003;');
     } catch (err) {
       entry.status = 'error';
@@ -433,9 +436,17 @@
     }
   }
 
-  // ── Parse questions from full PDF text ───────────────────────
+  // ── Parse questions and response metadata from full PDF text ──
   function parseQuestions(text) {
     const map = new Map();
+
+    // Extract response stats from header (present anywhere in text)
+    const m_aud  = text.match(/Course Audience[:\s]+(\d+)/);
+    const m_resp = text.match(/Responses Received[:\s]+(\d+)/);
+    const m_rat  = text.match(/Response Ratio[:\s]+([\d.]+%)/);
+    const audience  = m_aud  ? m_aud[1]  : '';
+    const responses = m_resp ? m_resp[1] : '';
+    const ratio     = m_rat  ? m_rat[1]  : '';
 
     // Only parse after "Instructor Questions" to skip intro/guidelines
     const sectionIdx = text.indexOf('Instructor Questions');
@@ -459,7 +470,7 @@
       map.set(num, { question: q, mean });
     }
 
-    return map;
+    return { questions: map, responses, audience, ratio };
   }
 
   // ── Build the comparison table ───────────────────────────────
@@ -506,6 +517,19 @@
       tr.innerHTML = cells;
       tbody.appendChild(tr);
     });
+
+    // Response rate row
+    const respRow = document.createElement('tr');
+    respRow.className = 'avg-row';
+    let respCells = `<td class="q-num"></td><td class="q-text">Survey Completion</td>`;
+    ready.forEach(c => {
+      const label = (c.responses && c.audience)
+        ? `${c.responses}/${c.audience}${c.ratio ? ' (' + c.ratio + ')' : ''}`
+        : '—';
+      respCells += `<td class="mean-cell" style="font-size:0.85rem;color:var(--text)">${esc(label)}</td>`;
+    });
+    respRow.innerHTML = respCells;
+    tbody.appendChild(respRow);
 
     // Average row
     const avgRow = document.createElement('tr');
