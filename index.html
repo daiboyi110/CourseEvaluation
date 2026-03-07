@@ -750,7 +750,7 @@
     // Response rate row
     const respRow = document.createElement('tr');
     respRow.className = 'avg-row';
-    let respCells = `<td class="q-num"></td><td class="q-text">Survey Completion</td>`;
+    let respCells = `<td class="q-num"></td><td class="q-text" style="color:#000;font-weight:700">Survey Completion</td>`;
     ready.forEach(c => {
       let label = '—';
       if (c.responses && c.audience) {
@@ -767,7 +767,7 @@
     const teNums = courseType === 'sole' ? [1, 4, 7, 10, 16, 19] : [1, 3, 6, 7, 10, 11];
     const teRow  = document.createElement('tr');
     teRow.className = 'avg-row';
-    let teCells = `<td class="q-num"></td><td class="q-text">Teaching Effectiveness Score<br><span style="font-size:0.75rem;font-weight:400;color:var(--muted)">Avg of Q${teNums.join(', Q')}</span></td>`;
+    let teCells = `<td class="q-num"></td><td class="q-text" style="color:#000;font-weight:700">Teaching Effectiveness Score<br><span style="font-size:0.75rem;font-weight:400;color:var(--muted)">Avg of Q${teNums.join(', Q')}</span></td>`;
     ready.forEach(c => {
       const vals = teNums.map(n => c.questions.get(n)?.mean).filter(v => v !== undefined);
       if (vals.length > 0) {
