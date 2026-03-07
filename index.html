@@ -459,8 +459,7 @@
     const el = document.getElementById('file-' + id);
     if (el) el.remove();
     if (courses.length === 0) resetAll();
-    else updateToolbar();
-    hideResults();
+    else { updateToolbar(); buildTable(); }
   }
 
   // ── Process a single PDF ─────────────────────────────────────
