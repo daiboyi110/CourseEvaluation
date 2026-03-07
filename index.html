@@ -613,6 +613,21 @@
       tbody.appendChild(tr);
     });
 
+    // Response rate row
+    const respRow = document.createElement('tr');
+    respRow.className = 'avg-row';
+    let respCells = `<td class="q-num"></td><td class="q-text">Survey Completion</td>`;
+    ready.forEach(c => {
+      let label = '—';
+      if (c.responses && c.audience) {
+        const pct = (parseInt(c.responses) / parseInt(c.audience) * 100).toFixed(1) + '%';
+        label = `${c.responses}/${c.audience} (${pct})`;
+      }
+      respCells += `<td class="mean-cell" style="font-size:0.85rem;color:var(--text)">${esc(label)}</td>`;
+    });
+    respRow.innerHTML = respCells;
+    tbody.appendChild(respRow);
+
     // Teaching Effectiveness Score row
     // Sole: avg of Q1, 4, 7, 10, 16, 19 — Co-instructor: avg of Q1, 3, 6, 7, 10, 11
     if (courseType === 'sole' || courseType === 'co') {
@@ -632,33 +647,6 @@
       teRow.innerHTML = teCells;
       tbody.appendChild(teRow);
     }
-
-    // Response rate row
-    const respRow = document.createElement('tr');
-    respRow.className = 'avg-row';
-    let respCells = `<td class="q-num"></td><td class="q-text">Survey Completion</td>`;
-    ready.forEach(c => {
-      let label = '—';
-      if (c.responses && c.audience) {
-        const pct = (parseInt(c.responses) / parseInt(c.audience) * 100).toFixed(1) + '%';
-        label = `${c.responses}/${c.audience} (${pct})`;
-      }
-      respCells += `<td class="mean-cell" style="font-size:0.85rem;color:var(--text)">${esc(label)}</td>`;
-    });
-    respRow.innerHTML = respCells;
-    tbody.appendChild(respRow);
-
-    // Average row
-    const avgRow = document.createElement('tr');
-    avgRow.className = 'avg-row';
-    let avgCells = `<td class="q-num"></td><td class="q-text">Course Average</td>`;
-    ready.forEach(c => {
-      const vals = [...c.questions.values()].map(q => q.mean);
-      const avg  = vals.reduce((a, b) => a + b, 0) / vals.length;
-      avgCells  += `<td class="mean-cell"><span class="badge ${badgeClass(avg)}">${avg.toFixed(2)}</span></td>`;
-    });
-    avgRow.innerHTML = avgCells;
-    tbody.appendChild(avgRow);
 
     setVisible('resultsWrap', 'block');
   }
