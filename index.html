@@ -485,6 +485,7 @@
       const parsed = parseQuestions(fullText);
 
       if (parsed.questions.size === 0) {
+        entry.status = 'error';
         setFileStatus(entry.id, 'error', '!');
         showError('Could not extract scores from: ' + file.name);
       } else {
@@ -495,6 +496,7 @@
         if (wrongType) {
           const expected = isSole ? 'Sole Instructor / Course Coordinator (21 questions)' : 'Co-Instructor (12 questions)';
           const found    = isSole ? 'Co-Instructor' : 'Sole Instructor / Course Coordinator';
+          entry.status = 'error';
           setFileStatus(entry.id, 'error', '!');
           showError(`Wrong course type: "${file.name}" appears to be a ${found} PDF (${qCount} questions found), but "${expected}" is selected. Please switch the course type or upload the correct file.`);
         } else {
