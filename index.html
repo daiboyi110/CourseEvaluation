@@ -727,21 +727,13 @@
     }
 
     // Extract course name and instructor from header.
-    // Blue PDFs use a two-column table so try adjacent first, then positional fallback.
+    // The PDF begins with two parenthesized expressions:
+    //   first  → course name
+    //   second → instructor name
     let courseName = '', instructorName = '';
-
-    const mCourseAdj = headerText.match(/Course\s+(?:Title|Name)\s*:?\s*([^\n\r:]+?)(?:\s{3,}|\n|\r)/i);
-    if (mCourseAdj) courseName = mCourseAdj[1].trim();
-
-    // Instructor name: look for label followed by a capitalized proper name
-    const mInstrAdj = headerText.match(/Instructor\s*(?:Name\s*)?:?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
-    if (mInstrAdj) instructorName = mInstrAdj[1].trim();
-
-    // Positional fallback: scan broader context after "Instructor" label
-    if (!instructorName) {
-      const afterInstr = headerText.match(/Instructor[\s\S]{0,400}?([A-Z][a-z]+\s+[A-Z][a-z]+)/);
-      if (afterInstr) instructorName = afterInstr[1].trim();
-    }
+    const parenMatches = [...headerText.matchAll(/\(([^)]+)\)/g)];
+    if (parenMatches.length >= 1) courseName    = parenMatches[0][1].trim();
+    if (parenMatches.length >= 2) instructorName = parenMatches[1][1].trim();
 
     // Only parse after "Instructor Questions" to skip intro/guidelines
 
