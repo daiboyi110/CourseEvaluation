@@ -7,6 +7,63 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
+    /* ── Consent modal ───────────────────────────────── */
+    #consent-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #consent-box {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 100%;
+      padding: 36px 40px 30px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    }
+    #consent-box h2 {
+      font-size: 1.2rem;
+      color: #1a3a5c;
+      margin-bottom: 16px;
+    }
+    #consent-box h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 18px 0 8px;
+      color: #555;
+    }
+    #consent-box ul {
+      padding-left: 18px;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #2c3e50;
+    }
+    .consent-collected  { color: #c0392b; }
+    .consent-not-collected { color: #1a7a3a; font-weight: 600; }
+    #consent-box .consent-note {
+      font-size: 0.82rem;
+      color: #7f8c8d;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    #consent-agree-btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background: #1a3a5c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #consent-agree-btn:hover { background: #2980b9; }
+
     :root {
       --primary: #1a3a5c;
       --accent:  #2980b9;
@@ -388,6 +445,35 @@
 </head>
 <body>
 
+<!-- Consent modal -->
+<div id="consent-overlay">
+  <div id="consent-box">
+    <h2>Privacy &amp; Data Notice</h2>
+    <p style="font-size:0.93rem;line-height:1.6;color:#2c3e50;">
+      Before using this tool, please review what information is and is not collected when you access this page.
+    </p>
+
+    <h3 class="consent-collected">What may be collected by third parties</h3>
+    <ul>
+      <li><strong>GitHub Pages (site host)</strong> — your IP address and standard browser request metadata (browser type, OS, referrer) are logged when loading this page. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub's Privacy Statement</a>.</li>
+      <li><strong>Cloudflare CDN</strong> — your IP address and request metadata are processed when the PDF.js and XLSX libraries are downloaded. See <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare's Privacy Policy</a>.</li>
+    </ul>
+
+    <h3 class="consent-not-collected">What is NOT collected</h3>
+    <ul>
+      <li>The <strong>contents of your PDF files</strong> — all processing happens entirely in your browser; no file data is ever uploaded to any server.</li>
+      <li><strong>Course evaluation scores, instructor names, or any extracted data</strong> — none of this leaves your device.</li>
+      <li><strong>No cookies, analytics, or tracking</strong> are used by this site.</li>
+    </ul>
+
+    <p class="consent-note">
+      This tool is provided for internal use by CNHS faculty and staff. By clicking "I Agree", you acknowledge that you have read this notice.
+    </p>
+
+    <button id="consent-agree-btn" onclick="dismissConsent()">I Agree — Continue to the App</button>
+  </div>
+</div>
+
 <header>
   <h1>CNHS Course Evaluation Score Extractor</h1>
   <p>Upload one or more course evaluation PDFs to compare mean scores across courses</p>
@@ -524,6 +610,10 @@
 </main>
 
 <script>
+  function dismissConsent() {
+    document.getElementById('consent-overlay').style.display = 'none';
+  }
+
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
